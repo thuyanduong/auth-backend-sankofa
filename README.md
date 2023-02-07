@@ -1,168 +1,152 @@
-# Workshop: DB migrations and Seeds
+# MVC Review (10 minutes)
+- [MVC Diagram](https://developer.mozilla.org/en-US/docs/Learn/Server-side/Express_Nodejs/routes)
 
-### Review (5 min)
-- What are database migrations?
-- What are the benefits of database migrations?
-- What does seeding your database do?
-
-### Step X: Have your ERD in Hand! (5 min)
-- [ERD](https://viewer.diagrams.net/?tags=%7B%7D&highlight=0000ff&edit=_blank&layers=1&nav=1#G1nvP0HjgBdrqhqcMeShTi2SkIWInIZzmy)
-
-### Step X: Start a Node/Express project (5 min)
-- Create a node project using `npm init`
-- What does that command do? 
-- Code a little, test a little: How do we make sure it worked?
-
-### Step X: Refresh ourselves on knex (5 min)
-- `knex` to see a list of commands (If error, install knex globally using `npm install -g knex`)
-- `knex init` to initilize knex (If error, install knex locally using `npm install knex`)
-- What does that command do? How do we make sure it worked?
-
-### Step X: Knex and DB Set up (5 min)
-- We need to update `knexfile.js`
-- Specficially, the `development` object
-- Create your database (we'll use TablePlus as our UI)
-- Create your database _connection_ by copying the `staging` object
-- `npm install pg`
-- What does that command do? How do we make sure it worked?
-
-### Step 4: Creating the Migration files (5 min)
-- Create our first migration file
-- `knex migrate:make create_users`
-- Reference the official [knex docs](https://knexjs.org/guide/schema-builder.html)
-- Make sure to return a promise!
-
-### Step 5: Writing the migration code (15 min)
-- Create base tables first, then dependency tables afterwards. 
-
-#### Step 5a:
-- What does the code below do? What is the importance of the `increments()` and `primary()` methods?
+## Set up (10 minutes)
+1. Use your existing backend code with your migrations/seeds
+2. `touch index.js` to create your main server file
+3. `npm install express`
+4. `npm start` script
+5. Set up your server file and db file
 
 ```js
-exports.up = function(knex) {
-  return knex.schema.createTable('users', function (table) {
-    table.increments().primary();
-    table.string('username');
-    table.string('bio');
-    table.string('password');
-  })
-};
+//index.js
+const express = require("express")
+const app = express()
+const PORT = process.env.PORT || 8000 
 
-exports.down = function(knex) {
-  return knex.schema.dropTableIfExists('users')
-};
+app.get("/robots", (req, res) => {
+  res.send("here are the robots")
+})
+
+app.listen(PORT, function(){
+  console.log("Server started on port: ", PORT);
+})
 ```
-- Code a little, test a little!
-- How do we undo a migration?
-
-#### Step 5b:
-```js
-exports.up = function(knex) {
-  return knex.schema.createTable('robots', function (table) {
-    table.increments().primary();
-    table.string('robot_name');
-    table.integer('hp');
-    table.integer('level');
-  })
-};
-
-exports.down = function(knex) {
-  return knex.schema.dropTableIfExists('robots')
-};
-```
-- Again, code a little test a little!
-
-#### Step 5c:
-What's different about this migration?
-```js
-exports.up = function(knex) {
-  return knex.schema.createTable('user_robots', function (table) {
-    table.increments().primary();
-    table.integer('user_id')
-    table.integer('robot_id')
-    table.foreign('user_id').references('id').inTable('users');
-    table.foreign('robot_id').references('id').inTable('robots');
-  })
-};
-
-exports.down = function(knex) {
-  return knex.schema.dropTableIfExists('user_robots')
-};
-```
-- One last time, code a little, test a little
-
-### Step 6: Writing the Seed file (15 min)
-- `knex seed:make data`
-- The order of in which populate the tables matters! Why?
-- If you used `increment()`, then you don't need to insert primary keys (`id`)
-
-#### Step 6a: Seeding Users
 
 ```js
-  await knex('users').del()
-  await knex('users').insert([
-    {username: 'caston', bio: 'My name is Caston!', password: '123'},
-    {username: 'jowel', bio: 'I am Jowel!', password: '456'},
-    {username: 'ana', bio: 'Ana here!', password: '789'}
-  ]);
-```
-- Code a little, test a little
+//db.js
+const { Pool } = require('pg')
 
-#### Step 6b: Seeding Robots
+const connectionLocal = {
+  user: 'postgres',
+  host: 'localhost',
+  database: 'robotworkshop',
+  password: 'postgres',
+  port: 5432,
+}
+
+const connectionProduction = {
+  connectionString: process.env.DATABASE_URL, 
+  ssl: {rejectUnauthorized: false}
+}
+
+const pool = new Pool(process.env.NODE_ENV === 'production' ? connectionProduction : connectionLocal)
+
+module.exports = pool
+```
+
+## Creating each API Endpoint
+1. Start with the Router -> Controller -> Model
+
+### GET `/robots` (20 minutes)
+```js 
+//robotRouter.js
+const express = require('express')
+const router = express.Router()
+const {getAllRobots} = require("../controllers/robotsController")
+
+router.get("/", getAllRobots)
+
+module.exports = router
+```
+
+```js 
+//index.js
+const robotRouter = require("./routers/robotRouter")
+
+app.use("/robots", robotRouter)
+```
 
 ```js
-  await knex('robots').del()
-  await knex('robots').insert([
-    {robot_name: 'Optimus Prime', hp: 100, level: 10},
-    {robot_name: 'Megatron', hp: 110, level: 11},
-    {robot_name: 'Dr. Robot', hp: 120, level: 12},
-    {robot_name: 'Tron', hp: 130, level: 13},
-    {robot_name: 'RoboTractor', hp: 140, level: 14},
-    {robot_name: 'Full Metal Alchemist', hp: 150, level: 15},
-    {robot_name: 'Invader', hp: 160, level: 16},
-  ]);
-```
-- Code a little, test a little
+//robotsController.js
+const RobotModel = require("../models/robotModel")
 
-#### Step 6c: Seeding UserRobots
+const getAllRobots = async (req, res) => {
+  const robots = await RobotModel.getRobotsFromDB()
+  res.send(robots)
+}
+
+module.exports = {
+  getAllRobots
+}
+```
 
 ```js
-  await knex('user_robots').del()
-  await knex('user_robots').insert([
-    {user_id: 1, robot_id: 1},
-    {user_id: 1, robot_id: 2},
-    {user_id: 1, robot_id: 3},
-    {user_id: 1, robot_id: 4},
-    {user_id: 2, robot_id: 1},
-    {user_id: 2, robot_id: 5},
-    {user_id: 2, robot_id: 6},
-    {user_id: 2, robot_id: 7},
-    {user_id: 3, robot_id: 1},
-    {user_id: 3, robot_id: 3},
-    {user_id: 3, robot_id: 5},
-    {user_id: 3, robot_id: 7},
-  ]);
-```
-- Code a little, test a little!
-- OH NO! An error!
+//robotModel.js
+const pool = require("../db")
 
-#### Step 6d: Refactor 
-- When we delete our data, we should also reset the increment to start back at 1!
-- If you used `primary()`, this next SQL command will know to `RESTART IDENTITY`!
-- `CASCADE` gets rid of dependency issues!
+class RobotModel {
+  static async getSingleRobotFromDB(id){
+    let query = await pool.query("SELECT * FROM robots WHERE id = $1", [id])
+    return query.rows
+  }
+}
+
+module.exports = RobotModel
+```
+
+### GET `/users/:id` (20 minutes)
+```js 
+//userRouter.js
+const express = require('express')
+const router = express.Router()
+const {getSingleUser} = require("../controllers/usersController")
+
+router.get("/:id", getSingleUser)
+
+module.exports = router
+```
+
+```js 
+//index.js
+const robotRouter = require("./routers/robotRouter")
+const userRouter = require("./routers/userRouter")
+
+app.use("/robots", robotRouter)
+app.use("/users", userRouter)
+```
 
 ```js
-  await knex.raw('TRUNCATE TABLE user_robots RESTART IDENTITY CASCADE')
-  await knex.raw('TRUNCATE TABLE users RESTART IDENTITY CASCADE')
-  await knex.raw('TRUNCATE TABLE robots RESTART IDENTITY CASCADE')
+//usersController.js
+const UserModel = require("../models/userModel")
+
+const getSingleUser = async (req, res) => {
+  const userID = req.params.id
+  const user = await UserModel.getSingleUserFromDB(userID)
+  const userRobots = await UserModel.getUsersRobotsFromDB(userID)
+  res.send({user, userRobots})
+}
+
+module.exports = {
+  getSingleUser
+}
 ```
 
-### Step 7: Summary (5 min)
-- To reset or change your database
-  - Run `knex migrate:rollback` until you are at the base migration
-  - Then make changes to your migration files
-  - Run `knex migrate:latest` to spin up your schema 
-  - Run `knex seed:run` to populate your data
+```js
+//userModel.js
+const pool = require("../db")
 
-- To re-seed your database
-  - Run `knex seed:run`
+class UserModel { 
+  static async getSingleUserFromDB(id){
+    let query = await pool.query("SELECT * FROM users WHERE id = $1", [id])
+    return query.rows
+  }
+
+  static async getUsersRobotsFromDB(id){
+    let query = await pool.query("SELECT * FROM user_robots JOIN robots ON user_robots.robot_id = robots.id WHERE user_id = $1", [id])
+    return query.rows
+  }
+}
+
+module.exports = UserModel
+```
