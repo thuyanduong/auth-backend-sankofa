@@ -5,15 +5,15 @@ async function getSingleUser (req, res) {
   const userId = req.params.id
   const user = await UserModel.getSingleUserFromDB(userId) //async
   const usersRobots = await UserModel.getUsersRobotsFromDB(userId)
-  res.send({
-    user: user, 
-    usersRobot: usersRobots
-  })
+  res.send({user, usersRobots})
 }
 
-//function getAllUsers
-//function createUser
+async function getAllUsers(req, res){
+  const users = await UserModel.getAllUsersFromDB()
+  res.send(users)
+}
 
 module.exports = {
-  getSingleUser
+  getSingleUser, 
+  getAllUsers
 }

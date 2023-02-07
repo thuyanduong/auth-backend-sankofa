@@ -4,10 +4,13 @@ class RobotModel {
 
   static async getAllRobotsFromDB(){
     const query = await pool.query("SELECT * FROM robots;")
-    return query.rows //THIS IS our robots data
+    return query.rows 
   }
 
-  //static getSingleRobotFromDB
+  static async getSingleRobotFromDB(robotId){
+    const query = await pool.query("SELECT * FROM robots WHERE id = $1", [robotId])
+    return query.rows[0]
+  }
 
 }
 

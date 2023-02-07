@@ -2,13 +2,10 @@
 
 const express = require("express")
 const router = express.Router();
-const {getAllRobots} = require("../controllers/robotController")
+const {getAllRobots, getSingleRobot} = require("../controllers/robotController")
 
-// Endpoint: /robots
 router.get("/", getAllRobots)
 
-// GET /robots/:id
-
-// POST /robots
+router.get("/:id", getSingleRobot)
 
 module.exports = router
