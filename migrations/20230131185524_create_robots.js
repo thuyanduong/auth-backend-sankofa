@@ -4,10 +4,10 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('robots', function (table) {
-    table.increments().primary();
-    table.string('robot_name');
-    table.integer('hp');
-    table.integer('level');
+    table.increments('id').primary();
+    table.string('robot_name').notNullable();
+    table.integer('hp').notNullable();
+    table.integer('level').notNullable();
   })
 };
 

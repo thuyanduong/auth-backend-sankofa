@@ -4,9 +4,9 @@
  */
 exports.up = function(knex) {
   return knex.schema.createTable('user_robots', function (table) {
-    table.increments().primary();
-    table.integer('user_id')
-    table.integer('robot_id')
+    table.increments('id').primary();
+    table.integer('user_id').notNullable()
+    table.integer('robot_id').notNullable()
     table.foreign('user_id').references('id').inTable('users');
     table.foreign('robot_id').references('id').inTable('robots');
   })

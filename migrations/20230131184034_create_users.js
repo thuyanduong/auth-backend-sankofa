@@ -3,10 +3,10 @@
 exports.up = function(knex) {
   //create our table and cols
   return knex.schema.createTable('users', function (table) {
-    table.increments().primary();
-    table.string('username');
+    table.increments('id').primary();
+    table.string('username').notNullable()
     table.string('bio');
-    table.string('password');
+    table.string('password').notNullable();
   })
 };
 
