@@ -2,6 +2,8 @@
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> } 
  */
+const bcrypt = require("bcrypt")
+
 exports.seed = async function(knex) {
   // Deletes ALL existing entries
   // await knex('users').del()
@@ -12,9 +14,9 @@ exports.seed = async function(knex) {
   await knex.raw('TRUNCATE TABLE robots RESTART IDENTITY CASCADE')
 
   await knex('users').insert([
-    {username: 'caston', bio: 'My name is Caston!', password: '123'},
-    {username: 'jowel', bio: 'I am Jowel!', password: '456'},
-    {username: 'ana', bio: 'Ana here!', password: '789'}
+    {username: 'caston', bio: 'My name is Caston!', password: bcrypt.hashSync('123', 10)},
+    {username: 'jowel', bio: 'I am Jowel!', password: bcrypt.hashSync('456', 10)},
+    {username: 'ana', bio: 'Ana here!', password: bcrypt.hashSync('789', 10)}
   ]);
 
   await knex('robots').insert([
