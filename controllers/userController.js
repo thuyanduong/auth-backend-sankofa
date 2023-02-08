@@ -8,12 +8,6 @@ async function getSingleUser (req, res) {
   res.send({user, usersRobots})
 }
 
-async function getAllUsers(req, res){
-  const users = await UserModel.getAllUsersFromDB()
-  res.send(users)
-}
-
 module.exports = {
   getSingleUser, 
-  getAllUsers
 }
