@@ -28,7 +28,6 @@ async function register(req, res){
 async function login(req, res){
   const {username, password} = req.body
   let user = await UserModel.getUserByUsername(username)
-  console.log(user)
   if(bcrypt.compareSync(password, user.password)){
     user = await UserModel.getSingleUserFromDB(user.id) 
     const usersRobots = await UserModel.getUsersRobotsFromDB(user.id)
