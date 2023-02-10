@@ -1,6 +1,7 @@
 // Any logic that handles req and res should go in the Controller
 const UserModel = require("../models/userModel")
 const bcrypt = require("bcrypt")
+const jwt = require('jsonwebtoken');
 
 async function getSingleUser (req, res) {
   const userId = req.params.id
@@ -17,9 +18,10 @@ async function register(req, res){
   const {username, password, bio} = req.body
   let hashedPassword = bcrypt.hashSync(password, 10)
   try{
-    const newUser = await UserModel.postUserToDB(username, hashedPassword, bio)
-    const usersRobots = await UserModel.getUsersRobotsFromDB(newUser.id)
-    res.send({newUser, usersRobots})
+    const user = await UserModel.postUserToDB(username, hashedPassword, bio)
+    const usersRobots = await UserModel.getUsersRobotsFromDB(user.id)
+    const token = jwt.sign({ id: user.id }, 'sankofa');
+    res.send({user, token, usersRobots})
   }catch(error){
     res.status(400).send(error)
   }
